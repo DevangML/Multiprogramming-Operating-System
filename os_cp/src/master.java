@@ -10,7 +10,6 @@ public class master {
   int SI = 0;
   int ic = 0;
   byte c;
-  byte[][] buffer = new byte[10][4];
   String file; // For storing file location
 
   public master(byte[][] M, byte[] IR, byte[] R, String file) {
@@ -29,8 +28,44 @@ public class master {
     load();
   }
 
-  public void load() {
+  public void load(row,col) {
+    M = 0;
 
+    File file1 = new File(file);
+    BufferedReader br = new BufferedReader(new FileReader(file1));
+
+    while(br.readLine() != null) {
+      if (br.readLine() == "PD" || "GD") {
+        if (M == 100) {
+          // Alert that memory full
+          break;
+        }
+        for (int i = 0; i<=9; i++) {
+          for (int j = 0; j<4; j++){
+            M[row][col++] = br.readLine();
+          }
+          row++
+        }
+      }
+
+      else {
+        if (br.readLine() == "$AMJ")
+          break;
+      }
+      else if (br.readLine() == "$DTA") {
+        start_execution();
+      }
+      if (br.readLine() == "$END")
+          break;
+
+      M = M + 10;
+      }
+    }
+  
+
+  public void start_execution() {
+    ic = 00;
+    slave.execute_user_program();
   }
 
   public void read(row, col) {
@@ -51,5 +86,7 @@ public class master {
         M[row++][col] = br.readLine();
       }
     }
+        slave.execute_user_program();
   }
 }
+
