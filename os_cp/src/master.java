@@ -33,4 +33,23 @@ public class master {
 
   }
 
+  public void read(row, col) {
+    File file1 = new File(file);
+    BufferedReader br
+            = new BufferedReader(new FileReader(file1));
+    IR[3] = 0;
+
+    // Declaring a string variable
+
+    // Doubt : There are multiple $DTA
+
+    int counter = 0;
+
+
+    if (br.readLine() == "$DTA") {
+      while(br.readLine() != "$END") {
+        M[row++][col] = br.readLine();
+      }
+    }
+  }
 }
