@@ -44,7 +44,7 @@ public class master {
           for (int j = 0; j<4; j++){
             M[row][col++] = br.readLine();
           }
-          row++
+          row++;
         }
       }
 
