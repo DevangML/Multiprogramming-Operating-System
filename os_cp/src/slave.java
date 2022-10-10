@@ -1,25 +1,38 @@
 public class slave {
-  
+    byte[][] M = new byte[100][4];
+    byte[] IR = new byte[4];
+    byte[] R = new byte[4];
+    int SI = 0;
+    int ic = 0;
+    byte c;
+    File file; // For storing file location
+
+    public master(byte[][] M, byte[] IR, byte[] R, File file) {
+        this.M = M;
+        this.IR = IR;
+        this.R = R;
+        this.file = file; // For getting file location from main()
+    }
 
     public void executeUserProgram(){
         //loading IR
-        while (IC<10 && memory[IC][0] != '@') {
+        while (IC<10 && M[IC][0] != '@') {
             for (int i = 0; i < 4; i++) {
-                IR[i] = memory[IC][i];
+                IR[i] = M[IC][i];
             }
             IC++;
             switch (IR[0]) {
                 case 'L':
                     if(IR[1] == 'R'){
                         for(int i = 0;i<4;i++){
-                            R[i] = memory[(IR[2]-'0')*10 + (IR[3] -'0')][i];
+                            R[i] = M[(IR[2]-'0')*10 + (IR[3] -'0')][i];
                         }
                     }
                     break;
                 case 'S':
                     if(IR[1] == 'R'){
                         for(int i = 0;i<4;i++){
-                            memory[(IR[2]-'0')*10 + (IR[3] -'0')][i] = R[i];
+                            M[(IR[2]-'0')*10 + (IR[3] -'0')][i] = R[i];
                         }
                     }
                     break;
@@ -33,7 +46,7 @@ public class slave {
     
                 case 'B':
                     if(IR[1] == 'T'){
-                        if(toggle == true){
+                        if(C == true){
                             IC = (IR[2] - '0') *10 + (IR[3] - '0');
                         }
                     }
@@ -55,12 +68,6 @@ public class slave {
                     SI = 3;
                     start_execution();
                     break;
-    
-    
-    
-    
-    
-    
             }
         }
     }
