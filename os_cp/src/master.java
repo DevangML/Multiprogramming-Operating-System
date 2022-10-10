@@ -1,63 +1,105 @@
+package phase;
+import kava.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.*;
+import java.io.FileInputStream;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.Writer;
 
 public class master {
+  public char[][] M = new char[100][4];
+  public char[] IR = new char[4];
+  public char[] R = new char[4];
+  public int SI = 0;
+  public int ic;
+  public boolean C = false;
+  public String[] inputBuffer = new String[40];
+  public int data_index = 0;
+  public String time, id, lines_printed;
+  public File file; // For storing file location
 
-  byte[][] M = new byte[100][4];
-  byte[] IR = new byte[4];
-  byte[] R = new byte[4];
-  int SI = 0;
-  int ic = 0;
-  byte c;
-  File file; // For storing file location
-
-  public master(byte[][] M, byte[] IR, byte[] R, File file) {
-    this.M = M;
-    this.IR = IR;
-    this.R = R;
+  public master(File file) {
     this.file = file; // For getting file location from main()
   }
 
-  public void terminate() {
+  public void terminate() throws Exception {
     Writer output;
     output = new BufferedWriter(new FileWriter(file, true));
     output.append('\n');
     output.append('\n');
+    System.out.println("Program Executed");
     output.close();
     load();
   }
 
-  public void load(row,col) {
-    M = 0;
-    BufferedReader br = new BufferedReader(new FileReader(file));
+  public void load() throws Exception {
+    FileInputStream IN = new FileInputStream(file);
+    BufferedReader br = new BufferedReader(new InputStreamReader(IN));
+    FileWriter fr = new FileWriter("output.txt")
 
-    while(br.readLine() != null) {
-      if (br.readLine() == "PD" || "GD") {
-        if (M == 100) {
-          // Alert that memory full
-          break;
-        }
-        for (int i = 0; i<=9; i++) {
-          for (int j = 0; j<4; j++){
-            M[row][col++] = br.readLine();
-          }
-          row++;
-        }
+    int i = 0;
+
+    try{
+    String strLine = br.readLine();
+    // This loop fills the 40 byte buffer for buffered execution
+    while(strLine != null) {
+      inputBuffer[i] = strLine; // Started filling buffer
+      i++;
+      strLine = br.readLine();
+    }
+      }
+    catch (Exception e) {
+      System.out.println(e);
+    }
+    br.close();
+
+  int counter = -1, index = 0; // To read non code part i.e. metadata like TLE we keep counter at -1 initially
+
+  while (index<i) {
+    String line = inputBuffer[index];
+    
+    if (line != null && line.startsWith("$")) {
+      if (line.substring(1,4) == "AMJ"){
+        // This is control card code
+
+        fr.write("Reading Program");
+        id = line.substring(4,8);
+        time = line.substring(8,12);
+        lines_printed = line.substring(12,16);
+        counter = 0;
       }
 
-      else {
-        if (br.readLine() == "$AMJ")
-          break;
-      }
-      else if (br.readLine() == "$DTA") {
+      else if (line.substring(1,4) == "DTA"){
+        fr.write("Reading Data\n");
+        counter = 1;
+        data_index = index+1; // ye nahi samjha
         start_execution();
+        index = data_index - 1;
       }
-      if (br.readLine() == "$END")
-          break;
 
-      M = M + 10;
+      else if (line.substring(1,4) == "END") {
+        counter = -1;
+        C = false;
+        for(int i1 = 0; i1<100; i1++) {
+          for (int j = 0; j<4; j++) {
+            M[i1][j] = '\0'
+          }
+        }
       }
+      else {
+        System.out.println("Error in file");
+      }
+    }
+    else {
+      if (counter==0)
+    }
+  }
+
+
+
+
     }
   
 
@@ -83,6 +125,19 @@ public class master {
       }
     }
         slave.execute_user_program();
+  }
+
+  public void master_mode() throws Exception {
+    int operand = (IR[2]*10)+IR[3];
+    if (SI==1) {
+      GD(operand);
+    }
+    else if (SI==2) {
+      PD(operand);
+    }
+    else if (SI==3) {
+      terminate();
+    }
   }
 }
 

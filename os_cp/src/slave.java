@@ -1,13 +1,13 @@
 public class slave {
-    byte[][] M = new byte[100][4];
-    byte[] IR = new byte[4];
-    byte[] R = new byte[4];
+    char[][] M = new char[100][4];
+    char[] IR = new char[4];
+    char[] R = new char[4];
     int SI = 0;
     int ic = 0;
-    byte c;
+    char c;
     File file; // For storing file location
 
-    public master(byte[][] M, byte[] IR, byte[] R, File file) {
+    public master(char[][] M, char[] IR, char[] R, File file) {
         this.M = M;
         this.IR = IR;
         this.R = R;
