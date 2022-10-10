@@ -10,9 +10,9 @@ public class master {
   int SI = 0;
   int ic = 0;
   byte c;
-  String file; // For storing file location
+  File file; // For storing file location
 
-  public master(byte[][] M, byte[] IR, byte[] R, String file) {
+  public master(byte[][] M, byte[] IR, byte[] R, File file) {
     this.M = M;
     this.IR = IR;
     this.R = R;
@@ -30,9 +30,7 @@ public class master {
 
   public void load(row,col) {
     M = 0;
-
-    File file1 = new File(file);
-    BufferedReader br = new BufferedReader(new FileReader(file1));
+    BufferedReader br = new BufferedReader(new FileReader(file));
 
     while(br.readLine() != null) {
       if (br.readLine() == "PD" || "GD") {
@@ -69,9 +67,7 @@ public class master {
   }
 
   public void read(row, col) {
-    File file1 = new File(file);
-    BufferedReader br
-            = new BufferedReader(new FileReader(file1));
+    BufferedReader br = new BufferedReader(new FileReader(file));
     IR[3] = 0;
 
     // Declaring a string variable
