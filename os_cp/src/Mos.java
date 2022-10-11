@@ -13,7 +13,7 @@ public class Mos {
   public char[] IR = new char[4];
   public char[] R = new char[4];
   public int SI = 0;
-  public int ic;
+  public int IC;
   public boolean C = false;
   public String[] inputBuffer = new String[40];
   public int data_index = 0;
@@ -24,8 +24,7 @@ public class Mos {
     this.file = file; // For getting file location from main()
   }
 
-
-  public void print_memory() throws IOException {
+  public void OUTPUT() throws IOException {
         FileWriter fr new FileWriter("output.txt");
         for (int i = 0; i<100; i++) {
             for (int j = 0; j<4; j++) {
@@ -41,65 +40,76 @@ public class Mos {
         fr.close();
     }
 
-    public void executeUserProgram(){
-        //loading IR
-        while (IC<10 && M[IC][0] != '@') {
-            for (int i = 0; i < 4; i++) {
-                IR[i] = M[IC][i];
-            }
-            IC++;
-            switch (IR[0]) {
-                case 'L':
-                    if(IR[1] == 'R'){
-                        for(int i = 0;i<4;i++){
-                            R[i] = M[(IR[2]-'0')*10 + (IR[3] -'0')][i];
-                        }
-                    }
-                    break;
-                case 'S':
-                    if(IR[1] == 'R'){
-                        for(int i = 0;i<4;i++){
-                            M[(IR[2]-'0')*10 + (IR[3] -'0')][i] = R[i];
-                        }
-                    }
-                    break;
-                case 'C':
-                    if (IR[1] == 'R') {
-                        char a =IR[2];
-                        char b =IR[3];
-                        comparing(a,b);
-                    }
-                    break;
-    
-                case 'B':
-                    if(IR[1] == 'T'){
-                        if(C == true){
-                            IC = (IR[2] - '0') *10 + (IR[3] - '0');
-                        }
-                    }
-                    break;
-    
-                case 'G':
-                    if (IR[1] == 'D') {
-                        SI = 1;
-                        start_execution();
-                    }
-                    break;
-                case 'P':
-                    if (IR[1] == 'D') {
-                        SI = 2;
-                        start_execution();
-                    }
-                    break;
-                case 'H':
-                    SI = 3;
-                    start_execution();
-                    break;
-            }
-        }
+  public void EXECUTE_USER_PROGRAM(){
+
+  for (int i = 0; i<Integer.parseInt(time); i++) {
+    IR = M[IC];
+    IC+=1;
+    if (IC == 10) {
+      IC+=10; //doubt
     }
 
-  public void read(int address) {
+  String instruction = ""+IR[0]+IR[1];
+  int operand = ()
+
+  //loading IR
+  while (IC<10 && M[IC][0] != '@') {
+      for (int i = 0; i < 4; i++) {
+          IR[i] = M[IC][i];
+      }
+      IC++;
+      switch (IR[0]) {
+          case 'L':
+              if(IR[1] == 'R'){
+                  for(int i = 0;i<4;i++){
+                      R[i] = M[(IR[2]-'0')*10 + (IR[3] -'0')][i];
+                  }
+              }
+              break;
+          case 'S':
+              if(IR[1] == 'R'){
+                  for(int i = 0;i<4;i++){
+                      M[(IR[2]-'0')*10 + (IR[3] -'0')][i] = R[i];
+                  }
+              }
+              break;
+          case 'C':
+              if (IR[1] == 'R') {
+                  char a =IR[2];
+                  char b =IR[3];
+                  comparing(a,b);
+              }
+              break;
+
+          case 'B':
+              if(IR[1] == 'T'){
+                  if(C == true){
+                      IC = (IR[2] - '0') *10 + (IR[3] - '0');
+                  }
+              }
+              break;
+
+          case 'G':
+              if (IR[1] == 'D') {
+                  SI = 1;
+                  MASTER();
+              }
+              break;
+          case 'P':
+              if (IR[1] == 'D') {
+                  SI = 2;
+                  MASTER();
+              }
+              break;
+          case 'H':
+              SI = 3;
+              MASTER();
+              break;
+      }
+    }
+  }
+
+  public void READ(int address) {
         int i = 0, j = 0;
         String lineNum = inputBuffer[data_index];
         System.out.println(lineNum);
@@ -114,10 +124,10 @@ public class Mos {
             }
         }
         data_index+=1; // to understand data_index and address
-        executeUserProgram();
+        EXECUTE_USER_PROGRAM();
     }
 
-  public void write(int address) throws Exception{
+  public void WRITE(int address) throws Exception{
 		FileWriter fr = new FileWriter("output.txt");
 		address = (address/10)*10;
 		for(int i=address;i<=address+10;i++){
@@ -130,21 +140,21 @@ public class Mos {
 		}
 		fr.write('\n');
 		fr.close();
-    executeUserProgram();
+    EXECUTE_USER_PROGRAM();
 	}
 
 
-  public void terminate() throws Exception {
+  public void TERMINATE() throws Exception {
     Writer output;
     output = new BufferedWriter(new FileWriter(file, true));
     output.append('\n');
     output.append('\n');
     System.out.println("Program Executed");
     output.close();
-    load();
+    LOAD();
   }
 
-  public void load() throws Exception {
+  public void LOAD() throws Exception {
     FileInputStream IN = new FileInputStream(file);
     BufferedReader br = new BufferedReader(new InputStreamReader(IN));
     FileWriter fr = new FileWriter("output.txt")
@@ -185,7 +195,7 @@ public class Mos {
         fr.write("Reading Data\n");
         counter = 1;
         data_index = index+1; // ye nahi samjha
-        start_execution();
+        START_EXECUTION();
         index = data_index - 1;
       }
 
@@ -213,21 +223,21 @@ public class Mos {
   }
 }
 
-  public void start_execution() {
-    ic = 00;
+  public void START_EXECUTION() {
+    IC = 00;
     slave.execute_user_program();
   }
 
-  public void master_mode() throws Exception {
+  public void MASTER() throws Exception {
     int operand = (IR[2]*10)+IR[3];
     if (SI==1) {
-      read(operand);
+      READ(operand);
     }
     else if (SI==2) {
-      write(operand);
+      WRITE(operand);
     }
     else if (SI==3) {
-      terminate();
+      TERMINATE();
     }
   }
 }
