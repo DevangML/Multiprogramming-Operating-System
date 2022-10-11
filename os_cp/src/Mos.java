@@ -1,9 +1,11 @@
 package phase;
-import kava.io.File;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 import java.io.FileInputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.Writer;
@@ -21,7 +23,7 @@ public class Mos {
   public File file; // For storing file location
 
   public Mos(File file) {
-    this.file = file; // For getting file location from main()
+    this.file = file; // For getting file location from main
   }
 
   public void OUTPUT() throws IOException {
@@ -35,118 +37,114 @@ public class Mos {
                     e.printStackTrace();
                 }
             }
-            fr.write("\n");
         }
         fr.close();
     }
 
-  public void EXECUTE_USER_PROGRAM(){
+  public void EXECUTE_USER_PROGRAM() {
 
-  for (int i = 0; i<Integer.parseInt(time); i++) {
-    IR = M[IC];
-    IC+=1;
-    if (IC == 10) {
-      IC+=10; //doubt
-    }
+    for (int i = 0; i < Integer.parseInt(time); i++) {
+      IR = M[IC]; // loading current instruction into IR
+      IC += 1;
 
-  String instruction = ""+IR[0]+IR[1];
-  int operand = ()
-
-  //loading IR
-  while (IC<10 && M[IC][0] != '@') {
-      for (int i = 0; i < 4; i++) {
-          IR[i] = M[IC][i];
+      if (IC == 10) {
+        IC += 10; // doubt
       }
-      IC++;
-      switch (IR[0]) {
-          case 'L':
-              if(IR[1] == 'R'){
-                  for(int i = 0;i<4;i++){
-                      R[i] = M[(IR[2]-'0')*10 + (IR[3] -'0')][i];
-                  }
-              }
-              break;
-          case 'S':
-              if(IR[1] == 'R'){
-                  for(int i = 0;i<4;i++){
-                      M[(IR[2]-'0')*10 + (IR[3] -'0')][i] = R[i];
-                  }
-              }
-              break;
-          case 'C':
-              if (IR[1] == 'R') {
-                  char a =IR[2];
-                  char b =IR[3];
-                  comparing(a,b);
-              }
-              break;
 
-          case 'B':
-              if(IR[1] == 'T'){
-                  if(C == true){
-                      IC = (IR[2] - '0') *10 + (IR[3] - '0');
-                  }
-              }
-              break;
+      String instruction = "" + IR[0] + IR[1];
+      int operand = (IR[2] * 10) + IR[3];
 
-          case 'G':
-              if (IR[1] == 'D') {
-                  SI = 1;
-                  MASTER();
-              }
-              break;
-          case 'P':
-              if (IR[1] == 'D') {
-                  SI = 2;
-                  MASTER();
-              }
-              break;
-          case 'H':
-              SI = 3;
-              MASTER();
-              break;
+      if (instruction == "LR")
+        R = M[operand];
+
+      else if (instruction == "SR")
+        M[operand] = R;
+
+      else if (instruction == "CR") {
+        if (M[operand] == R)
+          C = true;
+        else
+          C = false;
+      }
+
+      else if (instruction == "BT") {
+        if (C) {
+          IC = operand;
+        }
+      }
+
+      else if (instruction == "GD") {
+        SI = 1;
+        try {
+          MASTER();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+
+      else if (instruction == "PD") {
+        SI = 2;
+        try {
+          MASTER();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+
+      else if (instruction == "H\0") {
+        SI = 3;
+        try {
+          MASTER();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+        break;
       }
     }
   }
 
+  }
+
   public void READ(int address) {
-        int i = 0, j = 0;
-        String lineNum = inputBuffer[data_index];
-        System.out.println(lineNum);
-        address = (address/10)*10;
-        while(lineNum.charAt(i) != '\n') {
-            M[address][j] = lineNum.charAt(i);
-            i++;
-            j++;
-            if (j==4) {
-                j = 0;
-                address+=1;
-            }
-        }
-        data_index+=1; // to understand data_index and address
-        EXECUTE_USER_PROGRAM();
+    int i = 0, j = 0;
+    String lineNum = inputBuffer[data_index];
+    System.out.println(lineNum);
+    address = (address / 10) * 10;
+    // address base address && j is col number
+    while (lineNum.charAt(i) != '\n') {
+      M[address][j] = lineNum.charAt(i);
+      i++; // Character counter for buffer
+      j++;
+      if (j == 4) {
+        j = 0;
+        address += 1; // M row number
+      }
     }
-
-  public void WRITE(int address) throws Exception{
-		FileWriter fr = new FileWriter("output.txt");
-		address = (address/10)*10;
-		for(int i=address;i<=address+10;i++){
-			for(int j=0;j<4;j++){
-				if(memory[i][j]=='\0'){
-					break;
-				}
-				fr.write(memory[i][j]);
-			}
-		}
-		fr.write('\n');
-		fr.close();
+    data_index += 1; // to understand data_index and address
     EXECUTE_USER_PROGRAM();
-	}
 
+    // confusion between address and row number
+  }
+
+  public void WRITE(int address) throws Exception {
+    FileWriter fr = new FileWriter("output.txt");
+    address = (address / 10) * 10; // base address
+    for (int i = address; i <= address + 10; i++) {
+      for (int j = 0; j < 4; j++) {
+        if (M[i][j] == '\0') {
+          break;
+        }
+        fr.write(M[i][j]);
+      }
+    }
+    fr.write('\n');
+    fr.close();
+    EXECUTE_USER_PROGRAM();
+  }
 
   public void TERMINATE() throws Exception {
     Writer output;
-    output = new BufferedWriter(new FileWriter(file, true));
+    output = new BufferedWriter(new FileWriter("output.txt", true));
     output.append('\n');
     output.append('\n');
     System.out.println("Program Executed");
@@ -157,7 +155,7 @@ public class Mos {
   public void LOAD() throws Exception {
     FileInputStream IN = new FileInputStream(file);
     BufferedReader br = new BufferedReader(new InputStreamReader(IN));
-    FileWriter fr = new FileWriter("output.txt")
+    FileWriter fr = new FileWriter("output.txt");
 
     int i = 0;
 
@@ -195,7 +193,7 @@ public class Mos {
         fr.write("Reading Data\n");
         counter = 1;
         data_index = index+1; // ye nahi samjha
-        START_EXECUTION();
+        START_EXECUTION(); // It works according to counter value
         index = data_index - 1;
       }
 
@@ -204,10 +202,11 @@ public class Mos {
         C = false;
         for(int i1 = 0; i1<100; i1++) {
           for (int j = 0; j<4; j++) {
-            M[i1][j] = '\0'
+            M[i1][j] = '\0';
           }
         }
       }
+      
       else {
         System.out.println("Error in file");
       }
@@ -225,20 +224,17 @@ public class Mos {
 
   public void START_EXECUTION() {
     IC = 00;
-    slave.execute_user_program();
+    EXECUTE_USER_PROGRAM();
   }
 
   public void MASTER() throws Exception {
-    int operand = (IR[2]*10)+IR[3];
-    if (SI==1) {
+    int operand = (IR[2] * 10) + IR[3];
+    if (SI == 1) {
       READ(operand);
-    }
-    else if (SI==2) {
+    } else if (SI == 2) {
       WRITE(operand);
-    }
-    else if (SI==3) {
+    } else if (SI == 3) {
       TERMINATE();
     }
   }
 }
-
