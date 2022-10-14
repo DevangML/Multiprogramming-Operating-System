@@ -103,8 +103,6 @@ public class Mos {
     }
   }
 
-  }
-
   public void READ(int address) {
     int i = 0, j = 0;
     String lineNum = inputBuffer[data_index];
@@ -212,14 +210,25 @@ public class Mos {
       }
     }
     else {
-      if (counter==0) {
-        i = 0;
-        for (int n = 0; n<Integer.parseInt(time); n++){
-          if (line.charAt(i) == 'H')
-        }
-      }
+				if(counter==0) {
+					i=0;
+					for(int m=0;m<Integer.parseInt(time);m++) {
+						if(line.charAt(i)=='H') {
+							memory[m][0]=line.charAt(i);
+							i+=1;
+						}
+						else {
+							for(int kl=i;kl<i+4;kl++) {
+								memory[m][kl-i] = line.charAt(kl);
+							}
+							i+=4;
+						}
+					}
+				}
+			}
+      index+=1;
     }
-  }
+    fr.close();
 }
 
   public void START_EXECUTION() {
