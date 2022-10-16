@@ -9,6 +9,8 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.Writer;
+import java.io.OutputStreamWriter;
+import java.io.FileOutputStream;
 
 public class OS {
 
@@ -158,8 +160,11 @@ public class OS {
     }
     System.out.println(total + "In write");
     try {
-      output.write(total);
-      output.write("\n");
+      Writer output = new BufferedWriter(new OutputStreamWriter(
+          new FileOutputStream(outputFile, true), "UTF-8"));
+      output.append(total);
+      output.append("\r\n");
+      output.close();
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -194,7 +199,8 @@ public class OS {
           continue;
         } else if (inputBuffer[0] == '$' && inputBuffer[1] == 'E' && inputBuffer[2] == 'N' && inputBuffer[3] == 'D') {
           System.out.println("\n\n\n");
-          output.write("\n\n\n");
+          SI = 3;
+          MASTER();
           continue;
         }
         if (memory_used == 100) { // abort;
