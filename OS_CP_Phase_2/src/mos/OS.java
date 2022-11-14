@@ -9,8 +9,13 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.Writer;
+import java.util.HashMap;
+
+import javax.sound.midi.SysexMessage;
+
 import java.io.OutputStreamWriter;
 import java.io.FileOutputStream;
+import java.util.*;
 
 public class OS {
 
@@ -29,6 +34,7 @@ public class OS {
   private int LLC;
   private int TTL;
   private int TLL;
+  private int JID;
   private int EM = 0;
   private int IC;
   private boolean C = false;
@@ -43,7 +49,6 @@ public class OS {
   private FileReader input;
   private BufferedReader buff;
   private FileWriter output;
-  private BufferedWriter fwrite;
 
   // Constructor
   public OS(String file, String output) {
@@ -130,10 +135,10 @@ public class OS {
         MOS(inputBuffer);
       } else if (IR[0] == 'P' && IR[1] == 'D') {
         SI = 2;
-        MOS();
+        MOS(inputBuffer);
       } else if (IR[0] == 'H') {
         SI = 3;
-        MOS();
+        MOS(inputBuffer);
       }
     }
   }
@@ -165,8 +170,13 @@ public class OS {
   }
 
   public void WRITE() throws Exception {
+    LLC++;
+    if (LLC > TLL) {
+      TERMINATE(2);
+    }
+
     IR[3] = '0';
-    String line = new String(IR);
+    String line = new String(RA);
     int num = Integer.parseInt(line.substring(2));
     String t, total = "";
     for (int i = 0; i < 10; i++) {
@@ -183,14 +193,55 @@ public class OS {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    EXECUTE_USER_PROGRAM();
   }
 
-  public void TERMINATE() throws Exception {
+  public void TERMINATE(int error) throws Exception {
     Writer output;
     output = new BufferedWriter(new FileWriter(outputFile, true));
     output.append('\n');
     output.append('\n');
     System.out.println("Program Executed");
+
+    if (error > 0) {
+      System.out.println("JOB ID : " + JID);
+      if (error == 1) {
+        System.out.println("OUT OF DATA");
+      }
+
+      if (error == 2) {
+        System.out.println("LINE LIMIT EXCEEDED");
+      }
+
+      if (error == 3) {
+        System.out.println("TIME LIMIT EXCEEDED");
+      }
+
+      if (error == 4) {
+        System.out.println("OPCODE ERROR");
+      }
+
+      if (error == 5) {
+        System.out.println("OPERAND ERROR");
+      }
+
+      if (error == 6) {
+        System.out.println("PAGE FAULT");
+      }
+
+      if (error == 7) {
+        System.out.println("TIME LIMIT EXCEEDED WITH OPCODE");
+      }
+
+      if (error == 8) {
+        System.out.println("TIME LIMIT EXCEEDED WITH OPERAND");
+      }
+      System.out.println("IC : " + IC);
+      String ir = new String(IR);
+      System.out.println("IR : " + Integer.parseInt(ir));
+      System.out.println("TTC : " + TTC);
+      System.out.println("LLC : " + LLC);
+    }
     output.close();
     LOAD();
   }
@@ -215,7 +266,7 @@ public class OS {
         } else if (inputBuffer[0] == '$' && inputBuffer[1] == 'E' && inputBuffer[2] == 'N' && inputBuffer[3] == 'D') {
           System.out.println("\n\n\n");
           SI = 3;
-          MOS();
+          MOS(inputBuffer);
           continue;
         }
         if (memory_used == 100) { // abort;
@@ -289,11 +340,11 @@ public class OS {
     }
 
     if (ti == 2 && pi == 1) {
-      TERMINATE(3, 4);
+      TERMINATE(7);
     }
 
     if (ti == 2 && pi == 2) {
-      TERMINATE(3, 5);
+      TERMINATE(8);
     }
 
     if (ti == 2 && pi == 3) {
