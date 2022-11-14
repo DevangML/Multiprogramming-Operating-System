@@ -18,8 +18,8 @@ public class OS {
   private char[][] M = new char[300][4];
   private char[] IR = new char[4];
   private char[] R = new char[4];
-  private int SI;
-  private int TI;
+  private int SI = 3;
+  private int TI = 0;
   private int PI;
   private char[] PTR = new char[4];
   private int PCB; // To define class
@@ -127,7 +127,7 @@ public class OS {
         }
       } else if (IR[0] == 'G' && IR[1] == 'D') {
         SI = 1;
-        MOS();
+        MOS(inputBuffer);
       } else if (IR[0] == 'P' && IR[1] == 'D') {
         SI = 2;
         MOS();
@@ -138,9 +138,13 @@ public class OS {
     }
   }
 
-  public void READ() {
-    IR[3] = '0';
-    String line = new String(IR);
+  public void READ(char[] inputBuffer) {
+
+    if (inputBuffer[0] == '$' && inputBuffer[1] == 'E' && inputBuffer[2] == 'N' && inputBuffer[3] == 'D') {
+      TERMINATE(1);
+    }
+
+    String line = new String(RA);
 
     int num = Integer.parseInt(line.substring(2));
 
@@ -243,7 +247,7 @@ public class OS {
     IC = 0;
   }
 
-  public void MOS() throws Exception {
+  public void MOS(char[] inputBuffer) throws Exception {
     int si = this.SI;
     int ti = this.TI;
     int pi = this.PI;
@@ -251,7 +255,7 @@ public class OS {
     // Ti and Si section
 
     if (ti == 0 && si == 1) {
-      READ();
+      READ(inputBuffer);
     }
     if (ti == 0 && si == 2) {
       WRITE();

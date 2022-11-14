@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.Writer;
+import java.util.Arrays;
 import java.io.OutputStreamWriter;
 import java.io.FileOutputStream;
 
@@ -18,7 +19,7 @@ public class OS {
   private char[][] M = new char[100][4];
   private char[] IR = new char[4];
   private char[] R = new char[4];
-  private int SI;
+  private int SI = 3;
   private int IC;
   private boolean C = false;
   private char[] inputBuffer = new char[40];
@@ -71,10 +72,6 @@ public class OS {
 
   public void EXECUTE_USER_PROGRAM() throws Exception {
     while (2 < 3) {
-      if (IC == 100) {
-        break;
-      }
-
       IR[0] = M[IC][0];
       IR[1] = M[IC][1];
       IR[2] = M[IC][2];
@@ -116,22 +113,22 @@ public class OS {
         }
       } else if (IR[0] == 'G' && IR[1] == 'D') {
         SI = 1;
-        MASTER();
+        MOS();
       } else if (IR[0] == 'P' && IR[1] == 'D') {
         SI = 2;
-        MASTER();
+        MOS();
       } else if (IR[0] == 'H') {
         SI = 3;
-        MASTER();
+        MOS();
       }
     }
   }
 
-  public void READ() {
+  public void READ() throws Exception {
     IR[3] = '0';
     String line = new String(IR);
 
-    int num = Integer.parseInt(line.substring(2));
+    int num = Integer.parseInt(line.substring(2)); // operand
 
     try {
       line = buff.readLine();
@@ -147,6 +144,8 @@ public class OS {
         num++;
       }
     }
+
+    EXECUTE_USER_PROGRAM();
   }
 
   public void WRITE() throws Exception {
@@ -168,6 +167,7 @@ public class OS {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    EXECUTE_USER_PROGRAM();
   }
 
   public void TERMINATE() throws Exception {
@@ -182,6 +182,11 @@ public class OS {
 
   public void LOAD() throws Exception {
     SI = 0;
+
+    // M <- 0
+
+    Arrays.stream(M).forEach(x -> Arrays.fill(M, null));
+
     String strLine;
 
     try {
@@ -195,19 +200,19 @@ public class OS {
         }
 
         else if (inputBuffer[0] == '$' && inputBuffer[1] == 'D' && inputBuffer[2] == 'T' && inputBuffer[3] == 'A') {
-          EXECUTE_USER_PROGRAM();
+          START_EXECUTION();
           continue;
         } else if (inputBuffer[0] == '$' && inputBuffer[1] == 'E' && inputBuffer[2] == 'N' && inputBuffer[3] == 'D') {
           System.out.println("\n\n\n");
           SI = 3;
-          MASTER();
+          MOS();
           continue;
         }
         if (memory_used == 100) { // abort;
           System.out.println("Abort due to exceed M usage");
         }
 
-        for (int j = 0; j < strLine.length();) {
+        for (int j = 0; j < 10;) {
           M[memory_used][j % 4] = inputBuffer[j];
           j++;
           if (j % 4 == 0)
@@ -232,7 +237,7 @@ public class OS {
     IC = 0;
   }
 
-  public void MASTER() throws Exception {
+  public void MOS() throws Exception {
     int i = this.SI;
     if (i == 1) {
       READ();
