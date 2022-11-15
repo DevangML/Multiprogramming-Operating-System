@@ -9,7 +9,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.Writer;
-import java.util.HashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.sound.midi.SysexMessage;
 
@@ -21,12 +21,13 @@ public class OS {
 
   // Essential variables
   private char[][] M = new char[300][4];
+  private char[][] PT = new char[10][4];
   private char[] IR = new char[4];
   private char[] R = new char[4];
   private int SI = 3;
   private int TI = 0;
   private int PI;
-  private char[] PTR = new char[4];
+  private int PTR;
   private int PCB; // To define class
   private int VA;
   private int RA;
@@ -37,6 +38,7 @@ public class OS {
   private int JID;
   private int EM = 0;
   private int IC;
+  private int BA = 0;
   private boolean C = false;
   private char[] inputBuffer = new char[40];
   // private int data_index = 0;
@@ -49,6 +51,7 @@ public class OS {
   private FileReader input;
   private BufferedReader buff;
   private FileWriter output;
+  Set<Integer> set = new HashSet<>();
 
   // Constructor
   public OS(String file, String output) {
@@ -247,17 +250,71 @@ public class OS {
   }
 
   public void LOAD() throws Exception {
+
     SI = 0;
     String strLine;
 
     try {
       // This loop fills the 40 byte inputBuffer for buffered execution
       while ((strLine = buff.readLine()) != null) {
-        inputBuffer = strLine.toCharArray(); // Started filling inputBuffer
+        inputBuffer = strLine.replace(" ", "").toCharArray(); // Started filling inputBuffer
 
         if (inputBuffer[0] == '$' && inputBuffer[1] == 'A' && inputBuffer[2] == 'M' && inputBuffer[3] == 'J') {
           init();
+          StringBuilder sb = new StringBuilder();
+          sb.append(inputBuffer[5]).append(inputBuffer[6]).append(inputBuffer[7]).append(inputBuffer[8]);
+          String jid = sb.toString();
+          sb.setLength(0);
+          JID = Integer.parseInt(jid);
+          sb.append(inputBuffer[9]).append(inputBuffer[10]).append(inputBuffer[11]).append(inputBuffer[12]);
+          String ttl = sb.toString();
+          TTL = Integer.parseInt(ttl);
+          sb.setLength(0);
+          sb.append(inputBuffer[13]).append(inputBuffer[14]).append(inputBuffer[15]).append(inputBuffer[16]);
+          String tll = sb.toString();
+          TLL = Integer.parseInt(tll);
+          sb.setLength(0);
+          PCB PCB = new PCB(JID, TTL, TLL);
+          PTR = ALLOCATE();
+          int row = 0;
+          int col = 0;
+          while (row < PT.length) {
+            PT[row][col] = '0';
+            row++;
+          }
+          while (row < PT.length) {
+            col = 1;
+            PT[row][col] = '*';
+            row++;
+          }
+          while (row < PT.length) {
+            col = 2;
+            PT[row][col] = '*';
+            row++;
+          }
           continue;
+        }
+
+        else if (inputBuffer[0] == 'G' && inputBuffer[0] == 'D' || inputBuffer[0] == 'P' && inputBuffer[0] == 'D'
+            || inputBuffer[0] == 'L' && inputBuffer[0] == 'R' || inputBuffer[0] == 'S' && inputBuffer[0] == 'R'
+            || inputBuffer[0] == 'B' && inputBuffer[0] == 'T' || inputBuffer[0] == 'C' && inputBuffer[0] == 'R'
+            || inputBuffer[0] == 'H') {
+          BA = ALLOCATE();
+          int digit = BA / 10;
+          char c = (char) digit;
+
+          int row = 0;
+          PT[row][1] = c;
+          PT[row][2] = c;
+          int temp_ttl = TTL - 1;
+          while (temp_ttl > 0) {
+            BA = ALLOCATE();
+            digit = BA / 10;
+            c = (char) digit;
+            PT[row++][1] = c;
+            PT[row++][2] = c;
+            temp_ttl--;
+          }
         }
 
         else if (inputBuffer[0] == '$' && inputBuffer[1] == 'D' && inputBuffer[2] == 'T' && inputBuffer[3] == 'A') {
@@ -283,6 +340,15 @@ public class OS {
     } catch (Exception e) {
       System.out.println("Error in load: " + e);
     }
+  }
+
+  public int ALLOCATE() {
+    int temp = ThreadLocalRandom.current().nextInt(0, 30);
+    if (set.contains(temp)) {
+      temp = ThreadLocalRandom.current().nextInt(0, 30);
+    }
+    set.add(temp);
+    return temp * 10;
   }
 
   public void START_EXECUTION() throws Exception {
