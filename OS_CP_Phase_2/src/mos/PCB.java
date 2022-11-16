@@ -2,9 +2,9 @@ package mos;
 
 public class PCB {
 
-  private int TTL;
-  private int TLL;
-  private int JID;
+  public int TTL;
+  public int TLL;
+  public int JID;
 
   public PCB(int JID, int TTL, int TLL) {
     this.TTL = TTL;

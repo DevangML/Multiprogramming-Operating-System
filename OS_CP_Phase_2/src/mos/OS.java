@@ -9,10 +9,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.Writer;
-import java.util.concurrent.ThreadLocalRandom;
-
-import javax.sound.midi.SysexMessage;
-
 import java.io.OutputStreamWriter;
 import java.io.FileOutputStream;
 import java.util.*;
@@ -21,15 +17,14 @@ public class OS {
 
   // Essential variables
   private char[][] M = new char[300][4];
-  private char[][] PT = new char[10][4];
+  private char[][] PT = new char[300][4];
   private char[] IR = new char[4];
   private char[] R = new char[4];
   private int SI = 3;
   private int TI = 0;
   private int PI;
   private int PTR;
-  private int PCB; // To define class
-  private int VA;
+  private String VA;
   private int RA;
   private int TTC;
   private int LLC;
@@ -38,7 +33,6 @@ public class OS {
   private int JID;
   private int EM = 0;
   private int IC;
-  private int BA = 0;
   private boolean C = false;
   private char[] inputBuffer = new char[40];
   // private int data_index = 0;
@@ -51,7 +45,8 @@ public class OS {
   private FileReader input;
   private BufferedReader buff;
   private FileWriter output;
-  Set<Integer> set = new HashSet<>();
+  Map<Integer, String> map = new HashMap<>();
+  private int BA = 0;
 
   // Constructor
   public OS(String file, String output) {
@@ -66,17 +61,27 @@ public class OS {
     } catch (IOException e) {
       e.printStackTrace();
     }
+
+    map.put(++EM, "OUT OF DATA");
+    map.put(++EM, "LINE LIMIT EXCEEDED");
+    map.put(++EM, "TIME LIMIT EXCEEDED");
+    map.put(++EM, "OPERATION CODE");
+    map.put(++EM, "OPERAND");
+    map.put(++EM, "INVALID PAGE FAULT");
+    map.put(++EM, "TIME LIMIT EXCEEDED AND OPERATION CODE ERROR");
+    map.put(++EM, "TIME LIMIT EXCEEDED AND OPERAND ERROR");
+    EM = 0;
   }
 
   public void print_memory() {
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 300; i++) {
       System.out.println("memory[" + i + "] " + new String(M[i]));
     }
   }
 
   public void OUTPUT() throws IOException {
     FileWriter fr = new FileWriter(outputFile);
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 300; i++) {
       for (int j = 0; j < 4; j++) {
         try {
           fr.write(M[i][j]);
@@ -90,16 +95,22 @@ public class OS {
 
   public void EXECUTE_USER_PROGRAM() throws Exception {
     while (2 < 3) {
-      if (IC == 100) {
+      if (IC == 300) {
         break;
       }
 
-      IR[0] = M[IC][0];
-      IR[1] = M[IC][1];
-      IR[2] = M[IC][2];
-      IR[3] = M[IC][3];
-
+      VA = String.valueOf(IC);
+      RA = ADDRESSMAP(VA);
+      IR[0] = M[RA][0];
+      IR[1] = M[RA][1];
+      IR[2] = M[RA][2];
+      IR[3] = M[RA][3];
       IC++;
+      StringBuilder v = new StringBuilder();
+      v.append(IR[2]).append(IR[3]);
+      String vb = v.toString();
+      VA = String.valueOf(vb);
+      RA = ADDRESSMAP(VA);
 
       if (IR[0] == 'L' && IR[1] == 'R') {
         String line = new String(IR);
@@ -142,19 +153,63 @@ public class OS {
       } else if (IR[0] == 'H') {
         SI = 3;
         MOS(inputBuffer);
+      } else {
+        PI = 1;
+        MOS(inputBuffer);
       }
+      SIMULATION();
     }
   }
 
-  public void READ(char[] inputBuffer) {
+  public static boolean isNumeric(String str) {
+    try {
+      Double.parseDouble(str);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
+
+  public int ADDRESSMAP(String va) throws Exception {
+    int ra = 0;
+    if (isNumeric(va)) {
+      char[] frameno = new char[2];
+      frameno[0] = (char) (Character.getNumericValue(M[PTR][2]));
+      frameno[1] = (char) (Character.getNumericValue(M[PTR][3]));
+      String r = new String(frameno);
+
+      if (frameno[0] == '*' && frameno[1] == '*') {
+        PI = 3;
+        MOS(inputBuffer);
+      } else {
+        ra = Integer.parseInt(r) * 10 + (Integer.parseInt(va) / 10);
+      }
+    } else {
+      PI = 2;
+      MOS(inputBuffer);
+    }
+
+    return ra;
+  }
+
+  public void SIMULATION() throws Exception {
+    TTC++;
+    if (TTC > TTL) {
+      TI = 2;
+      MOS(inputBuffer);
+    }
+  }
+
+  public void READ(char[] inputBuffer) throws Exception {
 
     if (inputBuffer[0] == '$' && inputBuffer[1] == 'E' && inputBuffer[2] == 'N' && inputBuffer[3] == 'D') {
       TERMINATE(1);
     }
 
-    String line = new String(RA);
+    IR[3] = '0';
+    String line = new String(IR);
 
-    int num = Integer.parseInt(line.substring(2));
+    int num = Integer.parseInt(line.substring(2)); // operand
 
     try {
       line = buff.readLine();
@@ -179,9 +234,9 @@ public class OS {
     }
 
     IR[3] = '0';
-    String line = new String(RA);
-    int num = Integer.parseInt(line.substring(2));
     String t, total = "";
+    String line = new String(IR);
+    int num = Integer.parseInt(line.substring(2));
     for (int i = 0; i < 10; i++) {
       t = new String(M[num + i]);
       total = total.concat(t);
@@ -208,37 +263,7 @@ public class OS {
 
     if (error > 0) {
       System.out.println("JOB ID : " + JID);
-      if (error == 1) {
-        System.out.println("OUT OF DATA");
-      }
-
-      if (error == 2) {
-        System.out.println("LINE LIMIT EXCEEDED");
-      }
-
-      if (error == 3) {
-        System.out.println("TIME LIMIT EXCEEDED");
-      }
-
-      if (error == 4) {
-        System.out.println("OPCODE ERROR");
-      }
-
-      if (error == 5) {
-        System.out.println("OPERAND ERROR");
-      }
-
-      if (error == 6) {
-        System.out.println("PAGE FAULT");
-      }
-
-      if (error == 7) {
-        System.out.println("TIME LIMIT EXCEEDED WITH OPCODE");
-      }
-
-      if (error == 8) {
-        System.out.println("TIME LIMIT EXCEEDED WITH OPERAND");
-      }
+      System.out.println(map.get(error));
       System.out.println("IC : " + IC);
       String ir = new String(IR);
       System.out.println("IR : " + Integer.parseInt(ir));
@@ -257,37 +282,37 @@ public class OS {
     try {
       // This loop fills the 40 byte inputBuffer for buffered execution
       while ((strLine = buff.readLine()) != null) {
-        inputBuffer = strLine.replace(" ", "").toCharArray(); // Started filling inputBuffer
+        inputBuffer = strLine.toCharArray(); // Started filling inputBuffer
 
         if (inputBuffer[0] == '$' && inputBuffer[1] == 'A' && inputBuffer[2] == 'M' && inputBuffer[3] == 'J') {
           init();
           StringBuilder sb = new StringBuilder();
-          sb.append(inputBuffer[5]).append(inputBuffer[6]).append(inputBuffer[7]).append(inputBuffer[8]);
-          String jid = sb.toString();
+          sb.append(inputBuffer[4]).append(inputBuffer[5]).append(inputBuffer[6]).append(inputBuffer[7]);
+          int jid = Integer.parseInt(sb.toString());
           sb.setLength(0);
-          JID = Integer.parseInt(jid);
-          sb.append(inputBuffer[9]).append(inputBuffer[10]).append(inputBuffer[11]).append(inputBuffer[12]);
-          String ttl = sb.toString();
-          TTL = Integer.parseInt(ttl);
+          sb.append(inputBuffer[8]).append(inputBuffer[9]).append(inputBuffer[10]).append(inputBuffer[11]);
+          int ttl = Integer.parseInt(sb.toString());
           sb.setLength(0);
-          sb.append(inputBuffer[13]).append(inputBuffer[14]).append(inputBuffer[15]).append(inputBuffer[16]);
-          String tll = sb.toString();
-          TLL = Integer.parseInt(tll);
+          sb.append(inputBuffer[12]).append(inputBuffer[13]).append(inputBuffer[14]).append(inputBuffer[15]);
+          int tll = Integer.parseInt(sb.toString());
           sb.setLength(0);
-          PCB PCB = new PCB(JID, TTL, TLL);
+          PCB pcb = new PCB(jid, ttl, tll);
+          JID = pcb.JID;
+          TTL = pcb.TLL;
+          TLL = pcb.TLL;
           PTR = ALLOCATE();
-          int row = 0;
+          int row = PTR;
           int col = 0;
-          while (row < PT.length) {
+          while (row < PTR + 10) {
             PT[row][col] = '0';
             row++;
           }
-          while (row < PT.length) {
+          while (row < PTR + 10) {
             col = 1;
             PT[row][col] = '*';
             row++;
           }
-          while (row < PT.length) {
+          while (row < PTR + 10) {
             col = 2;
             PT[row][col] = '*';
             row++;
@@ -295,29 +320,37 @@ public class OS {
           continue;
         }
 
-        else if (inputBuffer[0] == 'G' && inputBuffer[0] == 'D' || inputBuffer[0] == 'P' && inputBuffer[0] == 'D'
-            || inputBuffer[0] == 'L' && inputBuffer[0] == 'R' || inputBuffer[0] == 'S' && inputBuffer[0] == 'R'
-            || inputBuffer[0] == 'B' && inputBuffer[0] == 'T' || inputBuffer[0] == 'C' && inputBuffer[0] == 'R'
+        else if (inputBuffer[0] == 'G' && inputBuffer[1] == 'D' || inputBuffer[0] == 'P' && inputBuffer[1] == 'D'
+            || inputBuffer[0] == 'L' && inputBuffer[1] == 'R' || inputBuffer[0] == 'S' && inputBuffer[1] == 'R'
+            || inputBuffer[0] == 'B' && inputBuffer[1] == 'T' || inputBuffer[0] == 'C' && inputBuffer[1] == 'R'
             || inputBuffer[0] == 'H') {
           BA = ALLOCATE();
           int digit = BA / 10;
-          char c = (char) digit;
+          int row = PTR;
+          String cc = Integer.toString(digit);
+          if (cc.length() == 1) {
+            PT[row][2] = cc.charAt(0);
+            PT[row][1] = '0';
+          } else {
+            PT[row][1] = cc.charAt(0);
+            PT[row][2] = cc.charAt(1);
+          }
 
-          int row = 0;
-          PT[row][1] = c;
-          PT[row][2] = c;
-          int temp_ttl = TTL - 1;
-          while (temp_ttl > 0) {
-            BA = ALLOCATE();
-            digit = BA / 10;
-            c = (char) digit;
-            PT[row++][1] = c;
-            PT[row++][2] = c;
-            temp_ttl--;
+          String tem = new String(inputBuffer);
+          System.out.println(tem);
+
+          for (int k = BA; k < BA + 10;) {
+            for (int j = 0; j < strLine.length();) {
+              M[k][j % 4] = tem.charAt(j);
+              j++;
+              if (j % 4 == 0)
+                k++;
+            }
           }
         }
 
         else if (inputBuffer[0] == '$' && inputBuffer[1] == 'D' && inputBuffer[2] == 'T' && inputBuffer[3] == 'A') {
+          PTR++;
           EXECUTE_USER_PROGRAM();
           continue;
         } else if (inputBuffer[0] == '$' && inputBuffer[1] == 'E' && inputBuffer[2] == 'N' && inputBuffer[3] == 'D') {
@@ -326,28 +359,31 @@ public class OS {
           MOS(inputBuffer);
           continue;
         }
-        if (memory_used == 100) { // abort;
+        if (IC == 300) { // abort;
           System.out.println("Abort due to exceed M usage");
-        }
-
-        for (int j = 0; j < strLine.length();) {
-          M[memory_used][j % 4] = inputBuffer[j];
-          j++;
-          if (j % 4 == 0)
-            memory_used++;
         }
       }
     } catch (Exception e) {
-      System.out.println("Error in load: " + e);
+      e.printStackTrace();
     }
   }
 
   public int ALLOCATE() {
-    int temp = ThreadLocalRandom.current().nextInt(0, 30);
-    if (set.contains(temp)) {
-      temp = ThreadLocalRandom.current().nextInt(0, 30);
+    int size = 30;
+
+    ArrayList<Integer> list = new ArrayList<Integer>(size);
+    for (int i = 0; i < size; i++) {
+      list.add(i);
     }
-    set.add(temp);
+
+    int temp = 0;
+
+    Random rand = new Random();
+    while (list.size() > 0) {
+      int index = rand.nextInt(list.size());
+      temp = list.remove(index);
+    }
+
     return temp * 10;
   }
 
@@ -357,9 +393,8 @@ public class OS {
   }
 
   public void init() {
-    memory_used = 0;
-    M = null;
-    M = new char[100][4];
+    BA = 0;
+    M = new char[300][4];
     C = false;
     IC = 0;
   }
