@@ -1,0 +1,96 @@
+00000000
+
+0000
+
+JOB ID :  0202
+	Program Executed Sucessfully
+IC     :  [0, 6]
+IR     :  ['H', '\x00', '\x00', '\x00']
+TTC    :  5
+LLC    :  2
+
+
+CAT CANEAT RAT
+
+RAT
+
+JOB ID :  0302
+	Program Executed Sucessfully
+IC     :  [1, 0]
+IR     :  ['H', '\x00', '\x00', '\x00']
+TTC    :  9
+LLC    :  2
+
+
+JOB ID :  0102
+	Invalid Page Fault
+IC     :  [0, 2]
+IR     :  ['L', 'R', '3', '6']
+TTC    :  1
+LLC    :  0
+
+
+JOB ID :  0401
+	Invalid Page Fault
+IC     :  [0, 1]
+IR     :  ['P', 'D', '5', '0']
+TTC    :  0
+LLC    :  0
+
+
+ TOGET0000
+
+JOB ID :  1503
+	Program Executed Sucessfully
+IC     :  [1, 0]
+IR     :  ['H', '\x00', '\x00', '\x00']
+TTC    :  9
+LLC    :  1
+
+
+JOB ID :  1403
+	Program Executed Sucessfully
+IC     :  [0, 1]
+IR     :  ['H', '\x00', '\x00', '\x00']
+TTC    :  0
+LLC    :  0
+
+
+JOB ID :  1403
+	Program Executed Sucessfully
+IC     :  [0, 1]
+IR     :  ['H', '\x00', '\x00', '\x00']
+TTC    :  0
+LLC    :  0
+
+
+SHE SELLS   SEA SHELLS ON
+
+JOB ID :  0402
+	Operand Error
+IC     :  [0, 5]
+IR     :  ['P', 'D', '3', 'F']
+TTC    :  4
+LLC    :  1
+
+
+SHE SELLS   SEA SHELLS ON
+
+JOB ID :  0403
+	Operation Code Error
+IC     :  [0, 5]
+IR     :  ['P', 'S', '4', '0']
+TTC    :  4
+LLC    :  1
+
+
+SHE SELLS   SEA SHELLS ON
+
+JOB ID :  0405
+	Time Limit Exceeded
+IC     :  [0, 4]
+IR     :  ['S', 'R', '3', '2']
+TTC    :  4
+LLC    :  1
+
+
