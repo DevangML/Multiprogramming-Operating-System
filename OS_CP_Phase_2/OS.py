@@ -1,4 +1,6 @@
 import random
+import os
+os.chdir(r'C:\Users\User\Desktop\desktop_files\OS-CP\OS_CP_Phase_2')
 
 m = 0
 IR = [0 for i in range(4)]
@@ -16,9 +18,8 @@ M = [['\0' for i in range(4)] for j in range(300)]
 opfile = open('output.txt', 'w')
 input_buffer = []  # size is 40 bytes
 data_index = 0
-
-pd_error = 0   # for line limit exceeded
-gd_error = 0   # for out of data
+pd_error = 0
+gd_error = 0
 
 
 class PCB:
@@ -47,7 +48,7 @@ def READ(address):
     global data_index, gd_error
     i, j = 0, 0
     line = input_buffer[data_index]
-    if (line[0] == "$"):  # checking for out of data error
+    if (line[0] == "$" and line[1] == "E"):  # checking for out of data error
         gd_error = -1
         return
     address = (address // 10) * 10
@@ -94,11 +95,17 @@ def TERMINATE(EM):
         print("\tOperand Error", file=opfile)
     elif (EM == 6):
         print("\tInvalid Page Fault", file=opfile)
+    elif (EM == 7):
+        print("\tTLE with opcode error", file=opfile)
+    elif (EM == 8):
+        print("\tTLE with operand error", file=opfile)
 
     print("IC     : ", IC, file=opfile)
     print("IR     : ", IR, file=opfile)
     print("TTC    : ", pcb.TTC, file=opfile)
     print("LLC    : ", pcb.LLC, file=opfile)
+    print("TTL    : ", pcb.TLL, file=opfile)
+    print("TTL    : ", pcb.TTL, file=opfile)
     print("\n", file=opfile)
 
 
@@ -153,13 +160,13 @@ def LOAD():
                     R = [0 for i in range(4)]
                     C = False
                     SI = 0  # need to be looked
+                    pd_error = 0
+                    gd_error = 0
                     PI = 0
                     TI = 0
                     PTR = [0 for i in range(4)]
                     used_frames.clear()
                     counter = -1
-                    pd_error = 0
-                    gd_error = 0
                 else:
                     print('error in input')
                     exit(-1)
@@ -215,54 +222,55 @@ def LOAD():
 def START_EXECUTION():
     IC[0] = 0
     IC[1] = 0
-    # print(PTR)
     EXECUTE_USER_PROGRAM()
 
 
 def MOS(valid=False):
-    global SI, TI, PI
+    global SI, TI, PI, gd_error, pd_error
+
+    if (gd_error == -1):
+        TERMINATE(1)
+
+    if (pd_error == -1):
+        TERMINATE(2)
+
     if (TI == 0):
-        if (SI == 0):
-            if (PI == 1):
-                TERMINATE(4)  # Operation Code Error
-            elif (PI == 2):
-                TERMINATE(5)  # Operand Error
-            elif (PI == 3):  # page fault
-                if (valid):  # valid argument passed to master mode function
-                    valid_page_fault()
-                else:
-                    TERMINATE(6)  # invalid page fault
+        if (PI == 1):
+            TERMINATE(4)  # Operation Code Error
+        elif (PI == 2):
+            TERMINATE(5)  # Operand Error
+        elif (PI == 3):  # page fault
+            if (valid):  # valid argument passed to master mode function
+                valid_page_fault()
+            else:
+                TERMINATE(6)  # invalid page fault
         else:
             if (SI == 1):  # read function GD
-                READ(ADRESSMAP(int(IR[2]) * 10 + int(IR[3])))
+                READ(ADDRESSMAP(int(IR[2]) * 10 + int(IR[3])))
             elif (SI == 2):  # write function PD
-                WRITE(ADRESSMAP(int(IR[2]) * 10 + int(IR[3])))
+                WRITE(ADDRESSMAP(int(IR[2]) * 10 + int(IR[3])))
             elif (SI == 3):  # TERMINATE successfully
                 TERMINATE(0)
 
     elif (TI == 2):
+        if (PI == 1):
+            TERMINATE(7)  # TLE with opcode error
+        elif (PI == 2):
+            TERMINATE(8)  # TLE with operand error
+        elif (PI == 3):
+            TERMINATE(3)  # Time Limit Exceeded
 
-        if (SI == 0):
-            if (PI == 1):
-                TERMINATE(3)  # Time Limit Exceeded
-                TERMINATE(4)
-            elif (PI == 2):
-                TERMINATE(3)  # Time Limit Exceeded
-                # TERMINATE(5)
-            elif (PI == 3):
-                TERMINATE(3)  # Time Limit Exceeded
-
-        else:
-            if (SI == 1):
-                TERMINATE(3)
-            elif (SI == 2):
-                WRITE(ADRESSMAP(int(IR[2]) * 10 + int(IR[3])))
-                TERMINATE(3)
-            elif (SI == 3):
-                TERMINATE(0)
+    else:
+        if (SI == 1):
+            TERMINATE(3)
+        elif (SI == 2):
+            WRITE(ADDRESSMAP(int(IR[2]) * 10 + int(IR[3])))
+            TERMINATE(3)
+        elif (SI == 3):
+            TERMINATE(0)
 
 
-def ADRESSMAP(VA):
+def ADDRESSMAP(VA):
 
     global PTR, M
     # first we get page table entry
@@ -298,6 +306,7 @@ def valid_page_fault():
 
 def SIMULATION():
     global SI, TI
+    pcb.incrementTTC()
     if (pcb.TTC > pcb.TTL):
         SI = 1
         TI = 2
@@ -305,129 +314,119 @@ def SIMULATION():
 
 
 def EXECUTE_USER_PROGRAM():
-    time_counter = 0
     while (1):
+        global IC, IR, R, C, T, SI, TI, PI
+        SI = 0
+        PI = 0
+        TI = 0
 
-        if (pcb.TTC <= pcb.TTL):   # checking for time limit exceeded error
+        # converting virtual address to real addresss
+        inst_count = ADDRESSMAP(10 * IC[0] + IC[1])
+        if (inst_count == -1):  # master mode - operand error
+            PI = 2
+            MOS()
+            break
 
-            global IC, IR, R, C, T, SI, TI, PI, pd_error
-            SI = 0
-            PI = 0
-            TI = 0
-            # converting virtual address to real addresss
-            inst_count = ADRESSMAP(10 * IC[0] + IC[1])
-            if (inst_count == -1):  # master mode - operand error
+        IC[1] += 1  # incrementing IC
+        if IC[1] == 10:
+            IC[0] += 1
+            IC[1] = 0
+
+        IR = M[inst_count]
+        print("IR", IR)
+
+        inst = "" + IR[0] + IR[1]
+
+        if (inst[0] != "H"):
+
+            if ((IR[2].isnumeric() and IR[3].isnumeric()) == False):  # checking for operand error
                 PI = 2
                 MOS()
                 break
-            IR = M[inst_count]
-            print("IR", IR)
-            IC[1] += 1  # incrementing IC
-            if IC[1] == 10:
-                IC[0] += 1
-                IC[1] = 0
-            inst = "" + IR[0] + IR[1]
+            real_address = ADDRESSMAP(int(IR[2]) * 10 + int(IR[3]))
 
-            if (inst[0] != "H"):
-
-                if ((IR[2].isnumeric() and IR[3].isnumeric()) == False):  # checking for operand error
-
-                    PI = 2
-                    MOS()
-
-                    break
-                real_address = ADRESSMAP(int(IR[2]) * 10 + int(IR[3]))
-
-            if inst == "LR":
-                if (real_address == -1):  # invalid page fault
-                    PI = 3
-                    MOS()
-                    break
-                R = M[real_address]
-
-            elif inst == "SR":
-                if (real_address == -1):  # valid page fault
-                    PI = 3
-                    # decrementing IC
-                    if IC[1] != 0:
-                        IC[1] -= 1
-                    else:
-                        IC[1] = 9
-                        IC[0] -= 1
-                    MOS(valid=True)
-                    time_counter -= 1
-                    # pcb.TTC -= 1
-                    continue
-                else:
-                    M[real_address] = R
-
-            elif inst == "CR":
-
-                if (real_address == -1):  # invalid page fault
-                    PI = 3
-                    MOS()
-                    break
-                if (M[real_address] == R):
-                    C = True
-                else:
-                    C = False
-            elif inst == "BT":
-                if (C):
-                    IC[0] = int(IR[2])
-                    IC[1] = int(IR[3])
-
-            elif inst == "GD":
-                print(inst_count, real_address)
-                if (real_address == -1):  # valid page fault
-                    PI = 3
-                    SI = 0
-                    print('valid page fault')
-                    MOS(valid=True)
-                    if IC[1] != 0:
-                        IC[1] -= 1
-                    else:
-                        IC[1] = 9
-                        IC[0] -= 1
-                    PI = 0
-                    time_counter -= 1
-                    # pcb.TTC -= 1
-                    continue
-                SI = 1
-
+        if inst == "LR":
+            if (real_address == -1):  # invalid page fault
+                PI = 3
                 MOS()
-                if (gd_error == -1):  # out of data
-                    TERMINATE(1)
-                    break
-                #READ(int(IR[2]) * 10 + int(IR[3]))
-            elif inst == "PD":
-                if (real_address == -1):  # invalid page fault
-                    PI = 3
-                    MOS()
-                    break
-                else:
-                    SI = 2
-                    MOS()
-                    if (pd_error == -1):  # if line limit exceeds
-                        TERMINATE(2)
-                        break
-
-                #WRITE(int(IR[2]) * 10 + int(IR[3]))
-            elif inst == "H\0":
-                SI = 3
-                MOS()
-                # TERMINATE()
                 break
+            R = M[real_address]
 
+        elif inst == "SR":
+            if (real_address == -1):  # valid page fault
+                PI = 3
+                # decrementing IC
+                if IC[1] != 0:
+                    IC[1] -= 1
+                else:
+                    IC[1] = 9
+                    IC[0] -= 1
+                MOS(valid=True)
+                pcb.TTC -= 1
+                # pcb.TTC -= 1
+                continue
             else:
-                PI = 1
+                M[real_address] = R
+
+        elif inst == "CR":
+
+            if (real_address == -1):  # invalid page fault
+                PI = 3
                 MOS()
                 break
-            pcb.incrementTTC()
+            if (M[real_address] == R):
+                C = True
+            else:
+                C = False
 
-        else:         # time limit exceeded error
-            SIMULATION()
+        elif inst == "BT":
+            if (C):
+                IC[0] = int(IR[2])
+                IC[1] = int(IR[3])
+
+        elif inst == "GD":
+            print(inst_count, real_address)
+            if (real_address == -1):  # valid page fault
+                PI = 3
+                SI = 0
+                print('valid page fault')
+                MOS(valid=True)
+                if IC[1] != 0:
+                    IC[1] -= 1
+                else:
+                    IC[1] = 9
+                    IC[0] -= 1
+                PI = 0
+                pcb.TTC -= 1
+                continue
+            SI = 1
+            MOS()
+            if (gd_error == -1):
+                MOS()
+                break
+        elif inst == "PD":
+            if (real_address == -1):  # invalid page fault
+                PI = 3
+                MOS()
+                break
+            else:
+                SI = 2
+                MOS()
+                if (pd_error == -1):
+                    MOS()
+                    break
+
+        elif inst == "H\0":
+            SI = 3
+            MOS()
             break
-        time_counter += 1
+
+        else:
+            PI = 1
+            MOS()
+            break
+        SIMULATION()
+    pcb.incrementTTC
 
 
 if __name__ == "__main__":
