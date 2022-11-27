@@ -1,6 +1,6 @@
 import random
 import os
-os.chdir(r'C:\Users\User\Desktop\desktop_files\OS-CP\OS_CP_Phase_2')
+os.chdir(r'D:\ISHAN\TY_AI-A_Sem 5\OS\CP\OS-CP\OS_CP_Phase_2')
 
 IR = [0 for i in range(4)]
 IC = [0 for i in range(2)]
