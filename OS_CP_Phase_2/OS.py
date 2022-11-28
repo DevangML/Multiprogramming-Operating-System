@@ -1,6 +1,6 @@
 import random
 import os
-os.chdir(r'D:\ISHAN\TY_AI-A_Sem 5\OS\CP\OS-CP\OS_CP_Phase_2')
+os.chdir(r'C:\Users\User\Documents\Projects\TY\OS-CP\OS_CP_Phase_2')
 
 IR = [0 for i in range(4)]
 IC = [0 for i in range(2)]
@@ -63,7 +63,8 @@ def READ(address):
 
 def WRITE(address):
     global pd_err
-    if (pcb.LLC >= pcb.TLL):  # checking for line limit exceeded
+    pcb.incrementLLC()
+    if (pcb.LLC > pcb.TLL):  # checking for line limit exceeded
         pd_err = -1
         return
     address = (address // 10) * 10
@@ -74,7 +75,6 @@ def WRITE(address):
                 break
             print(M[i][j], end="", file=outfile)
     print('\n', file=outfile)
-    pcb.incrementLLC()
 
 
 def TERMINATE(EM):
@@ -239,10 +239,10 @@ def MOS(valid=False):
         elif (PI == 2):
             TERMINATE(5)  # Operand Error
         elif (PI == 3):  # page fault
-            if (valid):  # valid argument passed to master mode function
+            if (valid):
                 valid_page_fault()
             else:
-                TERMINATE(6)  # invalid page fault
+                TERMINATE(6)
         else:
             if (SI == 1):  # read function GD
                 READ(ADDRESSMAP(int(IR[2]) * 10 + int(IR[3])))
@@ -258,15 +258,14 @@ def MOS(valid=False):
             TERMINATE(8)  # TLE with operand error
         elif (PI == 3):
             TERMINATE(3)  # Time Limit Exceeded
-
-    else:
-        if (SI == 1):
-            TERMINATE(3)
-        elif (SI == 2):
-            WRITE(ADDRESSMAP(int(IR[2]) * 10 + int(IR[3])))
-            TERMINATE(3)
-        elif (SI == 3):
-            TERMINATE(0)
+        else:
+            if (SI == 1):
+                TERMINATE(3)
+            elif (SI == 2):
+                WRITE(ADDRESSMAP(int(IR[2]) * 10 + int(IR[3])))
+                TERMINATE(3)
+            elif (SI == 3):
+                TERMINATE(0)
 
 
 def ADDRESSMAP(VA):
@@ -306,13 +305,13 @@ def valid_page_fault():
 def SIMULATION():
     global SI, TI
     pcb.incrementTTC()
-    if (pcb.TTC > pcb.TTL):
-        SI = 1
+    if (pcb.TTC == pcb.TTL):
         TI = 2
-        MOS()
+        return
 
 
 def EXECUTE_USER_PROGRAM():
+    time_counter = 0
     while (1):
         global IC, IR, R, C, T, SI, TI, PI
         SI = 0
@@ -322,6 +321,7 @@ def EXECUTE_USER_PROGRAM():
         # converting virtual address to real addresss
         inst_count = ADDRESSMAP(10 * IC[0] + IC[1])
         if (inst_count == -1):  # master mode - operand error
+
             PI = 2
             MOS()
             break
@@ -336,6 +336,8 @@ def EXECUTE_USER_PROGRAM():
 
         inst = "" + IR[0] + IR[1]
 
+        RA = 0
+
         if (inst[0] != "H"):
 
             if ((IR[2].isnumeric() and IR[3].isnumeric()) == False):  # checking for operand error
@@ -346,6 +348,7 @@ def EXECUTE_USER_PROGRAM():
 
         if inst == "LR":
             if (RA == -1):  # invalid page fault
+
                 PI = 3
                 MOS()
                 break
@@ -362,7 +365,6 @@ def EXECUTE_USER_PROGRAM():
                     IC[0] -= 1
                 MOS(valid=True)
                 pcb.TTC -= 1
-                # pcb.TTC -= 1
                 continue
             else:
                 M[RA] = R
@@ -398,6 +400,7 @@ def EXECUTE_USER_PROGRAM():
                 PI = 0
                 pcb.TTC -= 1
                 continue
+
             SI = 1
             MOS()
             if (gd_err == -1):
@@ -405,10 +408,12 @@ def EXECUTE_USER_PROGRAM():
                 break
         elif inst == "PD":
             if (RA == -1):  # invalid page fault
+
                 PI = 3
                 MOS()
                 break
             else:
+
                 SI = 2
                 MOS()
                 if (pd_err == -1):
@@ -416,16 +421,17 @@ def EXECUTE_USER_PROGRAM():
                     break
 
         elif inst == "H\0":
+
             SI = 3
             MOS()
             break
 
         else:
+
             PI = 1
             MOS()
             break
-        SIMULATION()
-    pcb.incrementTTC
+    SIMULATION()
 
 
 if __name__ == "__main__":

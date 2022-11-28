@@ -1,17 +1,3 @@
-00000000
-
-0000
-
-JOB ID :  0202
-	Program Executed Sucessfully
-IC     :  [0, 6]
-IR     :  ['H', '\x00', '\x00', '\x00']
-TTC    :  0
-LLC    :  2
-TTL    :  4
-TTL    :  25
-
-
 CAT CANEAT RAT
 
 RAT
@@ -20,9 +6,9 @@ JOB ID :  0302
 	Program Executed Sucessfully
 IC     :  [1, 0]
 IR     :  ['H', '\x00', '\x00', '\x00']
-TTC    :  6
+TTC    :  -3
 LLC    :  2
-TTL    :  2
+TLL    :  2
 TTL    :  10
 
 
@@ -30,52 +16,10 @@ JOB ID :  0102
 	Invalid Page Fault
 IC     :  [0, 2]
 IR     :  ['L', 'R', '3', '6']
-TTC    :  -1
+TTC    :  -2
 LLC    :  0
-TTL    :  2
+TLL    :  2
 TTL    :  7
-
-
-JOB ID :  0401
-	Invalid Page Fault
-IC     :  [0, 1]
-IR     :  ['P', 'D', '5', '0']
-TTC    :  0
-LLC    :  0
-TTL    :  4
-TTL    :  9
-
-
- TOGET0000
-
-JOB ID :  1503
-	Program Executed Sucessfully
-IC     :  [1, 0]
-IR     :  ['H', '\x00', '\x00', '\x00']
-TTC    :  1
-LLC    :  1
-TTL    :  10
-TTL    :  20
-
-
-JOB ID :  1403
-	Program Executed Sucessfully
-IC     :  [0, 1]
-IR     :  ['H', '\x00', '\x00', '\x00']
-TTC    :  0
-LLC    :  0
-TTL    :  8
-TTL    :  50
-
-
-JOB ID :  1403
-	Program Executed Sucessfully
-IC     :  [0, 1]
-IR     :  ['H', '\x00', '\x00', '\x00']
-TTC    :  0
-LLC    :  0
-TTL    :  8
-TTL    :  50
 
 
 SHE SELLS   SEA SHELLS ON
@@ -84,9 +28,9 @@ JOB ID :  0402
 	Operand Error
 IC     :  [0, 5]
 IR     :  ['P', 'D', '3', 'F']
-TTC    :  0
+TTC    :  -4
 LLC    :  1
-TTL    :  2
+TLL    :  2
 TTL    :  4
 
 
@@ -96,9 +40,9 @@ JOB ID :  0403
 	Operation Code Error
 IC     :  [0, 5]
 IR     :  ['P', 'S', '4', '0']
-TTC    :  0
+TTC    :  -4
 LLC    :  1
-TTL    :  2
+TLL    :  2
 TTL    :  4
 
 
@@ -108,9 +52,9 @@ JOB ID :  0405
 	Invalid Page Fault
 IC     :  [0, 5]
 IR     :  ['P', 'D', '4', '0']
-TTC    :  1
+TTC    :  -3
 LLC    :  1
-TTL    :  2
+TLL    :  2
 TTL    :  3
 
 
